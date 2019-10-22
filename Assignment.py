@@ -1,7 +1,7 @@
 import copy
 import itertools
 
-import queue
+#import queue
 
 
 class CSP:
@@ -119,8 +119,10 @@ class CSP:
         pass
 
     #assignment = deep copy of self.domains
+
+    #DONE
     def select_unassigned_variable(self, assignment):
-        # DONE
+        # TODO
 
         """The function 'Select-Unassigned-Variable' from the pseudocode
         in the textbook. Should return the name of one of the variables
@@ -133,29 +135,35 @@ class CSP:
                 return variable_key
         pass
 
+    #DONE
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
         'assignment' is the current partial assignment, that contains
         the lists of legal values for each undecided variable. 'queue'
         is the initial queue of arcs that should be visited.
         """
+
+        # 'queue' is the initial queue of arcs that should be visited.
+
         while (queue != []): #while we still have a var in sudoku to find
             (X_i, X_j) = queue.pop() #get two sudoku variables
             D_i = assignment[X_i]
 
-            if revise(assignment, X_i, X_j):
+            if self.revise(assignment, X_i, X_j):
                 #if domains have been shrinken for X_i variable given X_j variable
 
                 if (D_i == []): # if no domain 
                     return False # an inconsistency is found, sudoku can't be solved
 
-                for X_k in get_all_neighboring_arcs(self, X_i): #for variable in neighbour constraints (row, col, box)
+                for (X_k, meh) in self.get_all_neighboring_arcs(X_i): #for variable in neighbour constraints (row, col, box)
                     if (X_k != X_j): #we have allready revised for X_j
                         queue.append((X_k, X_i)) # add more vars to look at, add more constraints
 
         return True # all domains have been shrinken to 1 elem, suduko is solved
 
     # assignment == csp.domains
+
+    #DONE
     def revise(self, assignment, i, j):
         """The function 'Revise' from the pseudocode in the textbook.
         'assignment' is the current partial assignment, that contains
@@ -165,17 +173,8 @@ class CSP:
         between i and j, the value should be deleted from i's list of
         legal values in 'assignment'.
         """
-        
-        print("hi")
-        revised = False # meaning domain of i has not been shrinked
-        
-        """
-        X_i = sudoku_csp.variables[i] # from index to string
-        X_j = sudoku_csp.variables[j]
-        D_i = assignment[X_i] # list of strings, e.g ['1','3','4', '...']
-        D_j = assignment[X_j] # list of strings
-        """
 
+        revised = False # meaning domain of i has not been shrinked
 
         X_i = i # from index to string 
         X_j = j
@@ -266,19 +265,16 @@ def print_sudoku_solution(solution):
             print('------+-------+------')
 
 
-sudoku_csp = create_sudoku_csp("veryhard.txt") # this is the entire suduko csp object
+sudoku_csp = create_sudoku_csp("easy.txt") # this is the entire suduko csp object
+assignment = copy.deepcopy(sudoku_csp.domains) # equivalent to domains
+
 #print(sudoku_csp.variables) # 0-0, 0-1, 0-2....
 #print(sudoku_csp.domains) # 0-0 : ['1', '2', '3', '5', '6' ...]
 #print(sudoku_csp.domains["0-0"]) #['1', '2', '3', '5', '6' ...]
 
 
-### Test revise ###
-
-assignment = copy.deepcopy(sudoku_csp.domains) # equivalent to domains
-
-#print(assignment)
-#print(sudoku_csp.select_unassigned_variable(assignment))
-
+### Test revise and  select unassigned variable ###
+"""
 i = 1
 j = 2
 
@@ -297,8 +293,14 @@ print(X_j)
 print(D_j)
 
 print(sudoku_csp.revise(assignment, X_i, X_j))
+"""
 
+sudoku_csp.inference(sudoku_csp.domains, sudoku_csp.get_all_arcs())
+#print(sudoku_csp.domains)
+print_sudoku_solution(sudoku_csp.domains)
+#What is a queue and what is the arcs
+# It is all the constraints we have, a list of all variables that are related to each other
 
-#Test random
-#print(sudoku_csp.get_all_arcs()[0])
-#print(len(sudoku_csp.get_all_arcs()))
+#queue = sudoku_csp.get_all_arcs()
+#print(queue[0])
+#print(len(queue))
