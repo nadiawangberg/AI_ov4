@@ -74,6 +74,7 @@ class CSP:
             if i != j:
                 self.add_constraint_one_way(i, j, lambda x, y: x != y)
 
+    #DONE
     def backtracking_search(self):
         """This functions starts the CSP solver and returns the found
         solution.
@@ -116,9 +117,45 @@ class CSP:
         iterations of the loop.
         """
         # TODO: IMPLEMENT THIS
+
+        #if assignment is complete, return assignment
+        if self.completed(assignment):
+            return assignment
+
+        var = self.select_unassigned_variable(assignment)
+        for value in self.order_domain_values(var, assignment):
+        #if value is consistent with assignment:
+            new_assignment = copy.deepcopy(assignment)
+            new_assignment[var] = value # add value to assignment
+            
+            did_inference = self.inference(assignment, self.get_all_arcs())
+            #inference has been done to self
+
+
+            if did_inference: #meaning it wasnt a faliure
+                #add inferences to assignemnet??? 
+                got_result = self.Backtrack(assignment)
+                if got_result:
+                    return got_result
+
+            #remove {var = value} and inferences from assignment
+        return False
+
+
+
+
         pass
 
+    def completed(self, assignment):
+        for var in assignment:
+            if len(var[1]) > 1:
+                return False
+        return True
+
     #assignment = deep copy of self.domains
+    #DONE
+    def order_domain_values(self, var, assignment):
+        return assignment[var] #gives list of strings that are values var can take
 
     #DONE
     def select_unassigned_variable(self, assignment):
@@ -136,6 +173,7 @@ class CSP:
         pass
 
     #DONE
+    #Could potentially impose path or k-consitency (dep on what is useful)
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
         'assignment' is the current partial assignment, that contains
@@ -181,9 +219,7 @@ class CSP:
         D_i = assignment[X_i] # list of strings, e.g ['1','3','4', '...']
         D_j = assignment[X_j] # list of strings
         
-        print("hallo")
-
-        print("old domain: ", D_i)
+        #print("old domain: ", D_i)
         constraint_list = self.constraints[X_i][X_j]
 
         x_index = 0
@@ -199,7 +235,7 @@ class CSP:
 
             x_index+=1
 
-        print("new domain: ", assignment[X_i])
+        #print("new domain: ", assignment[X_i])
         return revised
 
 
@@ -265,7 +301,8 @@ def print_sudoku_solution(solution):
             print('------+-------+------')
 
 
-sudoku_csp = create_sudoku_csp("easy.txt") # this is the entire suduko csp object
+
+sudoku_csp = create_sudoku_csp("hard.txt") # this is the entire suduko csp object
 assignment = copy.deepcopy(sudoku_csp.domains) # equivalent to domains
 
 #print(sudoku_csp.variables) # 0-0, 0-1, 0-2....
@@ -295,9 +332,22 @@ print(D_j)
 print(sudoku_csp.revise(assignment, X_i, X_j))
 """
 
+print("BEFORE!")
+for key in sudoku_csp.domains:
+    print("len1: ", len(sudoku_csp.domains[key]), "len2: ", len(assignment[key]))
+
 sudoku_csp.inference(sudoku_csp.domains, sudoku_csp.get_all_arcs())
-#print(sudoku_csp.domains)
-print_sudoku_solution(sudoku_csp.domains)
+
+print("AFTER!")
+for key in sudoku_csp.domains:
+    print("len1: ", len(sudoku_csp.domains[key]), "len2: ", len(assignment[key]))
+#print(sudoku_csp.completed(sudoku_csp.domains))
+#print_sudoku_solution(sudoku_csp.domains)
+
+
+
+
+#print_sudoku_solution(sudoku_csp.domains)
 #What is a queue and what is the arcs
 # It is all the constraints we have, a list of all variables that are related to each other
 
