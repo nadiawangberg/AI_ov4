@@ -4,6 +4,9 @@ import itertools
 #import queue
 
 
+backtrack_call_num = 0 
+backtrack_fail_num = 0
+
 class CSP:
     def __init__(self):
         # self.variables is a list of the variable names in the CSP
@@ -116,46 +119,38 @@ class CSP:
         assignments and inferences that took place in previous
         iterations of the loop.
         """
-        # TODO: IMPLEMENT THIS
+        global backtrack_call_num, backtrack_fail_num
+        backtrack_call_num += 1
 
-        #if assignment is complete, return assignment
-        if self.completed(assignment):
-            return assignment
+        if self.completed(assignment): #if sudoku solved
+            print("backtrack fail num: ", backtrack_fail_num)
+            print("backtrack call num: ", backtrack_call_num)
+            return assignment # returned solved suduko
 
-        var = self.select_unassigned_variable(assignment)
-        for value in self.order_domain_values(var, assignment):
-        #if value is consistent with assignment:
-            new_assignment = copy.deepcopy(assignment)
-            new_assignment[var] = value # add value to assignment
+        var = self.select_unassigned_variable(assignment) #choose any var in sudoku that is not done
+        for value in assignment[var]: # for value in vars domain
+            # In backtracing_search inference was run making all elements in var's domain arc consistent, so value (from var's domain) is consistent
+            assignment_copy = copy.deepcopy(assignment) #Deep copy of 'assignment', to give every itr a clean slate, assignment never changes
+            assignment_copy[var] = value # try with an arbitrary value in vars domain, this modifies assignment_copy
             
-            did_inference = self.inference(assignment, self.get_all_arcs())
-            #inference has been done to self
+            did_inference = self.inference(assignment_copy, self.get_all_arcs()) # will do the inference (both deletion and adding) to self var
 
+            if did_inference: #meaning it wasnt a faliure, domains have been shrinken
+                result = self.backtrack(assignment_copy)
+                if result:
+                    return result
 
-            if did_inference: #meaning it wasnt a faliure
-                #add inferences to assignemnet??? 
-                got_result = self.Backtrack(assignment)
-                if got_result:
-                    return got_result
+        backtrack_fail_num += 1
+        return 0
 
-            #remove {var = value} and inferences from assignment
-        return False
-
-
-
-
-        pass
 
     def completed(self, assignment):
-        for var in assignment:
-            if len(var[1]) > 1:
+        for key in assignment:
+            if len(assignment[key]) > 1:
                 return False
         return True
 
     #assignment = deep copy of self.domains
-    #DONE
-    def order_domain_values(self, var, assignment):
-        return assignment[var] #gives list of strings that are values var can take
 
     #DONE
     def select_unassigned_variable(self, assignment):
@@ -170,7 +165,7 @@ class CSP:
         for variable_key in assignment: # var is key
             if len(assignment[variable_key]) > 1:
                 return variable_key
-        pass
+        return "couldnt find variable"
 
     #DONE
     #Could potentially impose path or k-consitency (dep on what is useful)
@@ -184,7 +179,7 @@ class CSP:
         # 'queue' is the initial queue of arcs that should be visited.
 
         while (queue != []): #while we still have a var in sudoku to find
-            (X_i, X_j) = queue.pop() #get two sudoku variables
+            X_i, X_j = queue.pop() #get two sudoku variables
             D_i = assignment[X_i]
 
             if self.revise(assignment, X_i, X_j):
@@ -228,8 +223,13 @@ class CSP:
             for y in D_j:
                 if (x,y) in constraint_list: # e.g (1, 4) in (1,1), (1,2), (1,3)
                     constraint_satisfied = True
-                    #brek   
+                    break   
             if (not constraint_satisfied):
+
+                #NEEDED FOR WEIRD BUG! S O R R Y
+                if (type(assignment[X_i]) == str):
+                    assignment[X_i] = [assignment[X_i]]
+
                 del assignment[X_i][x_index] #kill elem x, D_i[x_index]
                 revised = True
 
@@ -302,55 +302,9 @@ def print_sudoku_solution(solution):
 
 
 
-sudoku_csp = create_sudoku_csp("hard.txt") # this is the entire suduko csp object
+sudoku_csp = create_sudoku_csp("veryhard.txt") # this is the entire suduko csp object
 assignment = copy.deepcopy(sudoku_csp.domains) # equivalent to domains
 
-#print(sudoku_csp.variables) # 0-0, 0-1, 0-2....
-#print(sudoku_csp.domains) # 0-0 : ['1', '2', '3', '5', '6' ...]
-#print(sudoku_csp.domains["0-0"]) #['1', '2', '3', '5', '6' ...]
-
-
-### Test revise and  select unassigned variable ###
-"""
-i = 1
-j = 2
-
-X_i = sudoku_csp.variables[i] # from index to string
-X_j = sudoku_csp.variables[j]
-D_i = assignment[X_i] # list of strings, e.g ['1','3','4', '...']
-D_j = assignment[X_j] # list of strings
-
-
-print(i)
-print(X_i)
-print(D_i)
-
-print(j)
-print(X_j)
-print(D_j)
-
-print(sudoku_csp.revise(assignment, X_i, X_j))
-"""
-
-print("BEFORE!")
-for key in sudoku_csp.domains:
-    print("len1: ", len(sudoku_csp.domains[key]), "len2: ", len(assignment[key]))
-
-sudoku_csp.inference(sudoku_csp.domains, sudoku_csp.get_all_arcs())
-
-print("AFTER!")
-for key in sudoku_csp.domains:
-    print("len1: ", len(sudoku_csp.domains[key]), "len2: ", len(assignment[key]))
-#print(sudoku_csp.completed(sudoku_csp.domains))
-#print_sudoku_solution(sudoku_csp.domains)
-
-
-
-
-#print_sudoku_solution(sudoku_csp.domains)
-#What is a queue and what is the arcs
-# It is all the constraints we have, a list of all variables that are related to each other
-
-#queue = sudoku_csp.get_all_arcs()
-#print(queue[0])
-#print(len(queue))
+#sudoku_csp.inference(sudoku_csp.domains, sudoku_csp.get_all_arcs())
+print_sudoku_solution(sudoku_csp.backtracking_search())
+#print(sudoku_csp.backtracking_search())
